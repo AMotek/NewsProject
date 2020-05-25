@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="Set timed notification"
+        android:summary="set a timed notification to any subject">
+
+        <ListPreference
+            android:key="subject_list_pref"
+            android:title="Subject"
+            android:summary="select a subject to get notified"
+            android:entries="@array/subject_entries"
+            android:entryValues="@array/subject_values"/>
+
+        <ListPreference
+            android:key="timed_list_pref"
+            android:title="Time"
+            android:summary="select time to get auto notified"
+            android:entries="@array/time_entries"
+            android:entryValues="@array/time_values"/>
+
+    </PreferenceCategory>
+
+
+
+</PreferenceScreen>

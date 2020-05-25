@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">News Project</string>
+    <string name="set_notification">Set notification</string>
+
+    <string-array name="subject_entries">
+        <item >News</item>
+        <item >Sport</item>
+        <item >Financial</item>
+    </string-array>
+
+    <string-array name="subject_values">
+        <item>news</item>
+        <item>sports</item>
+        <item>financial</item>
+    </string-array>
+
+    <string-array name="time_entries">
+        <item>Never</item>
+        <item>Thirty seconds</item>
+        <item>One minute</item>
+        <item>Ten minutes</item>
+        <item>Thirty minutes</item>
+    </string-array>
+
+    <string-array name="time_values">
+        <item>0</item>
+        <item>30</item>
+        <item>60</item>
+        <item>600</item>
+        <item>1800</item>
+    </string-array>
+</resources>

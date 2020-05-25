@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card"
+    android:layout_width="120dp"
+    android:layout_height="125dp"
+    android:layout_margin="8dp"
+
+    style="@style/ShapeAppearance.App.MediumComponent">
+
+    <RelativeLayout
+
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:id="@+id/today_rl">
+
+        <ImageView
+            android:layout_marginStart="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:id="@+id/weather_iv"
+            android:src="@drawable/w01d"/>
+
+        <TextView
+            android:layout_below="@id/weather_iv"
+            android:layout_width="50dp"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_height="22dp"
+            android:gravity="center|top"
+            android:text="17\u2103"
+            android:id="@+id/max_temp_tv"/>
+
+        <TextView
+            android:layout_below="@id/max_temp_tv"
+            android:layout_width="50dp"
+            android:textSize="13sp"
+            android:layout_height="match_parent"
+            android:gravity="center|top"
+            android:text="17\u2103"
+            android:id="@+id/min_temp_tv"/>
+
+        <TextView
+            android:layout_alignParentEnd="true"
+            android:layout_below="@id/weather_iv"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:textSize="14sp"
+            android:text="17/5/90"
+            android:id="@+id/date_tv"/>
+
+
+    </RelativeLayout>
+
+
+</com.google.android.material.card.MaterialCardView>
