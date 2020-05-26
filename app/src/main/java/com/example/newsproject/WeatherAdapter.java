@@ -32,10 +32,43 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
     public void onBindViewHolder(@NonNull WeatherViewHolder holder, int position) {
 
         Weather weather = weatherList.get(position);
-        holder.weatherIv.setImageResource(R.drawable.w01d);
+        setIconResource(holder.weatherIv, weather.getIcon());
         holder.dateTv.setText(weather.getDate());
         holder.maxTempTv.setText(weather.getMaxTemp());
         holder.minTempTv.setText(weather.getMinTemp());
+    }
+
+    private void setIconResource(ImageView weatherIcon, String s) {
+
+        switch (s) {
+            case "w01d":
+                weatherIcon.setImageResource(R.drawable.w01d);
+                break;
+            case "w02d":
+                weatherIcon.setImageResource(R.drawable.w02d);
+                break;
+            case "w03d":
+                weatherIcon.setImageResource(R.drawable.w03d);
+                break;
+            case "w04d":
+                weatherIcon.setImageResource(R.drawable.w04d);
+                break;
+            case "w09d":
+                weatherIcon.setImageResource(R.drawable.w09d);
+                break;
+            case "w10d":
+                weatherIcon.setImageResource(R.drawable.w10d);
+                break;
+            case "w11d":
+                weatherIcon.setImageResource(R.drawable.w11d);
+                break;
+            case "w13d":
+                weatherIcon.setImageResource(R.drawable.w13d);
+                break;
+            case "w50d":
+                weatherIcon.setImageResource(R.drawable.w50d);
+                break;
+        }
     }
 
     @Override

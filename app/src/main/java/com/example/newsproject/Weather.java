@@ -7,6 +7,7 @@ public class Weather {
     String minTemp;
     String date;
 
+
     public Weather(String icon, String maxTemp, String minTemp, String date) {
         this.icon = icon;
         this.maxTemp = maxTemp;

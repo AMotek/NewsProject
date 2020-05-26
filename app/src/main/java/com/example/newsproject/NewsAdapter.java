@@ -81,6 +81,14 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
             iconView.setImageResource(R.drawable.sport5_icon);
         else if(newsReport.getSiteName().contains("mako"))
             iconView.setImageResource(R.drawable.mako_icon);
+        else if(newsReport.getSiteName().contains("geektime"))
+            iconView.setImageResource(R.drawable.geek_time_icon);
+        else if(newsReport.getSiteName().contains("haaretz"))
+            iconView.setImageResource(R.drawable.haaretz_icon);
+        else if(newsReport.getSiteName().contains("maariv"))
+            iconView.setImageResource(R.drawable.maariv_icon);
+        else if(newsReport.getSiteName().contains("globes"))
+            iconView.setImageResource(R.drawable.globes_icon);
         else
             iconView.setImageResource(R.drawable.default_icon);
     }

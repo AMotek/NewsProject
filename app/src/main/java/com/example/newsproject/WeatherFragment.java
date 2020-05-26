@@ -1,167 +1,164 @@
 package com.example.newsproject;
 
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class WeatherFragment extends Fragment {
 
-    private ImageView firstDayIv;
-    private TextView firstDayMaxTemp;
-    private TextView firstDayMinTemp;
-    private TextView firstDayDate;
+    private static final int REQ_LOCATION_PERMISSION = 1;
 
-    private ImageView secDayIv;
-    private TextView secDayMaxTemp;
-    private TextView secDayMinTemp;
-    private TextView secDayDate;
+    private FusedLocationProviderClient client;
+    private  Double lat = null;
+    private Double lng = null;
+    private WeatherAdapter weatherAdapter;
+    private List<Weather> weatherList = new ArrayList<>();
+    private RecyclerView weatherRecycler;
+    private BroadcastReceiver broadcastReceiver;
 
-    private ImageView thirdDayIv;
-    private TextView thirdDayMaxTemp;
-    private TextView thirdDayMinTemp;
-    private TextView thirdDayDate;
-
-    private View view;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.weather_feed, container, false);
-        this.view = view;
+        View view = inflater.inflate(R.layout.weather_fragment, container, false);
+        weatherRecycler = view.findViewById(R.id.weather_recycler);
+        setLocalBroadCast();
+        requestLocationPermission();
+
         return view;
     }
 
-    public void updateWeather(@NonNull JSONObject rootObject) {
+    private void setLocalBroadCast() {
 
-        // Parsing the json object
-        List<Date> dates = new ArrayList<>();
-        List<Integer> tempDaily = new ArrayList<>();
-        List<String> iconDaily = new ArrayList<>();
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
 
-        try {
-            JSONArray daysArray = rootObject.getJSONArray("daily");
+                if (intent.getAction() == WeatherService.ACTION) {
+                    Bundle receivedBundle = intent.getBundleExtra("weather_bundle");
+                    boolean isOkay = receivedBundle.getBoolean("is_okay", false);
 
-            for(int i = 0; i < 3; i++) {
+                    if (isOkay) {
 
-                JSONObject daily = (JSONObject) daysArray.get(i);
-                JSONObject temp = daily.getJSONObject("temp");
-                JSONArray weather =  daily.getJSONArray("weather");
-                JSONObject description =  weather.getJSONObject(0);
+                        if (weatherList != null) {
 
-                int timeStamp = daily.getInt("dt");
-                Date date = new java.util.Date((long)timeStamp*1000);
-                dates.add(date);
-                tempDaily.add(temp.getInt("min"));
-                tempDaily.add(temp.getInt("max"));
-                iconDaily.add("w"+description.getString("icon"));
+                            weatherList = (ArrayList<Weather>) receivedBundle.getSerializable("weather_list");
+                            setWeatherAdapter();
+                        } else
+                            Toast.makeText(context, "Something went wrong getting back weather predict", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
-            updateUI(dates, tempDaily, iconDaily);
-        } catch (JSONException e) {
+        };
+    }
 
-            e.printStackTrace();
+    private void setWeatherAdapter() {
+
+        weatherAdapter = new WeatherAdapter(weatherList);
+        weatherRecycler.setHasFixedSize(true);
+        weatherRecycler.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+        weatherRecycler.setAdapter(weatherAdapter);
+    }
+
+    private void requestLocationPermission() {
+
+        if(Build.VERSION.SDK_INT >= 23) {
+            int hasLocationPermission =   getActivity().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+            if(hasLocationPermission != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION_PERMISSION);
+            }
+            else setLocation();
         }
+        else setLocation();
     }
 
-    private void updateUI(List<Date>dates, List<Integer>tempDaily, List<String>iconDaily) {
 
-        attachIdsToViews();
-        String minTemp;
-        String maxTemp;
-        String dateString = new SimpleDateFormat("dd/MM/yy").format(dates.get(0));
+    private void setLocation() {
 
-        firstDayDate.setText(dateString);
-        setIconResource(firstDayIv, iconDaily.get(0));
-        minTemp = tempDaily.get(0) + "\u2103";
-        maxTemp = tempDaily.get(1).toString() + "\u2103";
-        firstDayMinTemp.setText(minTemp);
-        firstDayMaxTemp.setText(maxTemp);
+        client = LocationServices.getFusedLocationProviderClient(getActivity());
+        LocationCallback callback = new LocationCallback() {
 
-        dateString = new SimpleDateFormat("dd/MM/yy").format(dates.get(1));
-        secDayDate.setText(dateString);
-        setIconResource(secDayIv, iconDaily.get(1));
-        minTemp = tempDaily.get(2) + "\u2103";
-        maxTemp = tempDaily.get(3).toString() + "\u2103";
-        secDayMinTemp.setText(minTemp);
-        secDayMaxTemp.setText(maxTemp);
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
 
-        dateString = new SimpleDateFormat("dd/MM/yy").format(dates.get(2));
-        thirdDayDate.setText(dateString);
-        setIconResource(thirdDayIv, iconDaily.get(2));
-        minTemp = tempDaily.get(4) + "\u2103";
-        maxTemp = tempDaily.get(5).toString() + "\u2103";
-        thirdDayMinTemp.setText(minTemp);
-        thirdDayMaxTemp.setText(maxTemp);
+                Location lastLocation = locationResult.getLastLocation();
+                lng = lastLocation.getLongitude();
+                lat = lastLocation.getLatitude();
+
+                setWeatherService();
+            }
+        };
+
+        LocationRequest request = LocationRequest.create();
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        client.requestLocationUpdates(request, callback, null);
     }
 
-    private void setIconResource(ImageView firstDayIv, String s) {
+    private void setWeatherService() {
 
+        if(lat != null && lng != null) {
 
-        switch (s) {
-            case "w01d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w01d));
-                break;
-            case "w02d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w02d));
-                break;
-            case "w03d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w03d));
-                break;
-            case "w04d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w04d));
-                break;
-            case "w09d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w09d));
-                break;
-            case "w10d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w10d));
-                break;
-            case "w11d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w11d));
-                break;
-            case "w13d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w13d));
-                break;
-            case "w50d":
-                firstDayIv.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.w50d));
-                break;
+            Intent intent = new Intent(getContext(), WeatherService.class);
+            intent.putExtra("lat", lat);
+            intent.putExtra("lng", lng);
+            Log.d("weather_frag", "here");
+
+            if(intent.resolveActivity(getActivity().getPackageManager()) != null)
+                getActivity().startService(intent);
+
         }
+        else Toast.makeText(getContext(),
+                "Sorry something went wrong retrieving latitude and longitude. can't show weather ",
+                Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
 
-    private void attachIdsToViews() {
-        // First day views
-        firstDayDate = view.findViewById(R.id.first_day_date_tv);
-        firstDayIv = view.findViewById(R.id.first_day_iv);
-        firstDayMaxTemp = view.findViewById(R.id.first_day_max_weather_tv);
-        firstDayMinTemp = view.findViewById(R.id.first_day_min_weather_tv);
-        // Second day views
-        secDayDate = view.findViewById(R.id.sec_day_date_tv);
-        secDayIv = view.findViewById(R.id.sec_day_iv);
-        secDayMaxTemp = view.findViewById(R.id.sec_day_max_weather_tv);
-        secDayMinTemp = view.findViewById(R.id.sec_day_min_weather_tv);
-        // Third day views
-        thirdDayDate = view.findViewById(R.id.third_day_date_tv);
-        thirdDayIv = view.findViewById(R.id.third_day_iv);
-        thirdDayMaxTemp = view.findViewById(R.id.third_day_max_weather_tv);
-        thirdDayMinTemp = view.findViewById(R.id.third_day_min_weather_tv);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(broadcastReceiver);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        //Register to LocalBroadcast
+        IntentFilter iff = new IntentFilter(WeatherService.ACTION);
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(broadcastReceiver, iff);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode == REQ_LOCATION_PERMISSION && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+
+            Toast.makeText(getContext(), "Sorry can't update weather without permissions", Toast.LENGTH_SHORT).show();
+        }
+        else setLocation();
+    }
 }
