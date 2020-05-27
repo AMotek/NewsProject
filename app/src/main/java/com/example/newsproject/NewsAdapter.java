@@ -43,7 +43,6 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NewsViewHolder holder, int position) {
-        //TODO change holder.newIv to correct image
         NewsReport newsReport = news.get(position);
         setHeadLineImage(holder.newIv, newsReport.getImageURL());
         holder.dateTv.setText(newsReport.getDate());

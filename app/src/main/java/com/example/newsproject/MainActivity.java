@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -26,6 +27,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,13 +41,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int NOTIF_REQUEST = 0;
     private static final int NOTIF_ID = 1;
     private RecyclerView newRecyclerView;
-    private static int notifDurationSecs = 0;
     private SharedPreferences sp;
     private AlarmManager alarmManager;
-    private PendingIntent alarmManagerPendingIntent;
     private  ArrayList<NewsReport> newsList = null;
     private BroadcastReceiver broadcastReceiver;
     NewsAdapter newsAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,15 +55,15 @@ public class MainActivity extends AppCompatActivity {
         onLoadSet();
     }
 
+
     private void onLoadSet() {
         // Set all the preconditions for the app to run properly(anything needs to run first goes here)
         newRecyclerView = findViewById(R.id.recycler_view);
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         setLocalBroadCastReceiver();
-        setPendingIntent();
-        setWeatherFragment();
         setNewsService();
+        updateAutoNotifSettings();
     }
 
     private void setLocalBroadCastReceiver() {
@@ -67,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
 
                 if (intent.getAction().equals(NewsService.ACTION)) {
+                    findViewById(R.id.loadingPanel).setVisibility(View.GONE);
                     Bundle receiveBundle = intent.getBundleExtra("bundle");
 
                     boolean isResultOkay = receiveBundle.getBoolean("is_okay", false);
@@ -75,8 +82,9 @@ public class MainActivity extends AppCompatActivity {
                         setRecycler(newsList);
                         setOnNewsClickedListener();
                     } else
-                        Toast.makeText(context, "Oops something went wrong downloading news...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, getString(R.string.download_article_went_wrong), Toast.LENGTH_SHORT).show();
                 }
+                setWeatherFragment();
             }
         };
     }
@@ -99,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         IntentFilter iff = new IntentFilter(NewsService.ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, iff);
     }
@@ -113,14 +122,6 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, NewsService.class);
         startService(intent);
-    }
-
-
-    private void setPendingIntent() {
-
-        Intent intent = new Intent(this, AutoNotificationCenter.class);
-        alarmManagerPendingIntent = PendingIntent.getBroadcast(this, NOTIF_REQUEST, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
 
@@ -168,20 +169,21 @@ public class MainActivity extends AppCompatActivity {
 
         if(requestCode == SETTINGS_REQUEST) {
 
-            notifDurationSecs = Integer.parseInt(sp.getString("timed_list_pref", "0"));
+             updateAutoNotifSettings();
 
-            if(notifDurationSecs == 0) alarmManager.cancel(alarmManagerPendingIntent);
-
-            else updateAutoNotifSettings();
         }
     }
 
     private void updateAutoNotifSettings() {
 
-        setPendingIntent();
-        alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + notifDurationSecs *1000, alarmManagerPendingIntent);
-
+        int sec = Integer.parseInt(sp.getString("timed_list_pref", "0"));
+        if(sec > 0){
+            Intent intent = new Intent(this, AutoNotificationCenter.class);
+            PendingIntent alarmManagerPendingIntent = PendingIntent.getBroadcast(this, NOTIF_REQUEST, intent,
+                    PendingIntent.FLAG_CANCEL_CURRENT);
+            alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime() + sec * 1000, alarmManagerPendingIntent);
+        }
     }
 
 }

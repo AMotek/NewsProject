@@ -1,44 +1,66 @@
 package com.example.newsproject;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+
+
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class WeatherFragment extends Fragment {
+
+
 
     private static final int REQ_LOCATION_PERMISSION = 1;
 
     private FusedLocationProviderClient client;
-    private  Double lat = null;
+    private Double lat = null;
     private Double lng = null;
     private WeatherAdapter weatherAdapter;
     private List<Weather> weatherList = new ArrayList<>();
     private RecyclerView weatherRecycler;
+    private TextView noLocationPermissionTv;
     private BroadcastReceiver broadcastReceiver;
+    private boolean isWeatherShown = false;
+    private int counter = 0;
+    private View view;
+    private LocationCallback callback;
 
     @Nullable
     @Override
@@ -46,10 +68,50 @@ public class WeatherFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.weather_fragment, container, false);
         weatherRecycler = view.findViewById(R.id.weather_recycler);
+        noLocationPermissionTv = view.findViewById(R.id.no_location_perm_iv);
+        this.view = view;
+        setListeners();
         setLocalBroadCast();
         requestLocationPermission();
-
         return view;
+    }
+
+    private void setLocationCallBack() {
+
+        callback = new LocationCallback() {
+
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                isWeatherShown = true;
+                Location lastLocation = locationResult.getLastLocation();
+                lng = lastLocation.getLongitude();
+                lat = lastLocation.getLatitude();
+                setWeatherService();
+            }
+
+            @Override
+            public void onLocationAvailability(LocationAvailability locationAvailability) {
+                super.onLocationAvailability(locationAvailability);
+                if(!locationAvailability.isLocationAvailable() && !isWeatherShown && counter == 0) {
+                    counter++;
+                    Toast.makeText(getContext(), getString(R.string.turn_gps_on), Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+    }
+
+    private void setListeners() {
+
+        noLocationPermissionTv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:" + getActivity().getPackageName()));
+                startActivityForResult(intent, REQ_LOCATION_PERMISSION);
+            }
+        });
     }
 
     private void setLocalBroadCast() {
@@ -63,15 +125,18 @@ public class WeatherFragment extends Fragment {
                     boolean isOkay = receivedBundle.getBoolean("is_okay", false);
 
                     if (isOkay) {
-
+                        view.findViewById(R.id.loadingPanel).setVisibility(View.GONE);
                         if (weatherList != null) {
 
                             weatherList = (ArrayList<Weather>) receivedBundle.getSerializable("weather_list");
+
+
                             setWeatherAdapter();
                         } else
-                            Toast.makeText(context, "Something went wrong getting back weather predict", Toast.LENGTH_SHORT).show();
+                            Log.d("WEATHER_FRAG", "Something went wrong getting back weather predict");
                     }
                 }
+
             }
         };
     }
@@ -86,36 +151,35 @@ public class WeatherFragment extends Fragment {
 
     private void requestLocationPermission() {
 
+
         if(Build.VERSION.SDK_INT >= 23) {
-            int hasLocationPermission =   getActivity().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+            int hasLocationPermission =  getActivity().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
             if(hasLocationPermission != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION_PERMISSION);
             }
-            else setLocation();
+            else {
+                view.findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
+                setLocationCallBack();
+                setLocation();
+                noLocationPermissionTv.setVisibility(View.GONE);
+            }
         }
-        else setLocation();
+        else {
+            view.findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
+            setLocationCallBack();
+            setLocation();
+        }
+
     }
-
-
+    
     private void setLocation() {
 
+
         client = LocationServices.getFusedLocationProviderClient(getActivity());
-        LocationCallback callback = new LocationCallback() {
-
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-
-                Location lastLocation = locationResult.getLastLocation();
-                lng = lastLocation.getLongitude();
-                lat = lastLocation.getLatitude();
-
-                setWeatherService();
-            }
-        };
-
-        LocationRequest request = LocationRequest.create();
+        final LocationRequest request = LocationRequest.create();
         request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setInterval(5000);
+
         client.requestLocationUpdates(request, callback, null);
     }
 
@@ -126,15 +190,12 @@ public class WeatherFragment extends Fragment {
             Intent intent = new Intent(getContext(), WeatherService.class);
             intent.putExtra("lat", lat);
             intent.putExtra("lng", lng);
-            Log.d("weather_frag", "here");
 
             if(intent.resolveActivity(getActivity().getPackageManager()) != null)
                 getActivity().startService(intent);
 
         }
-        else Toast.makeText(getContext(),
-                "Sorry something went wrong retrieving latitude and longitude. can't show weather ",
-                Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getContext(), getString(R.string.getting_cords_fault), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -147,7 +208,7 @@ public class WeatherFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        //Register to LocalBroadcast
+
         IntentFilter iff = new IntentFilter(WeatherService.ACTION);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(broadcastReceiver, iff);
     }
@@ -157,8 +218,22 @@ public class WeatherFragment extends Fragment {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode == REQ_LOCATION_PERMISSION && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
 
-            Toast.makeText(getContext(), "Sorry can't update weather without permissions", Toast.LENGTH_SHORT).show();
+            noLocationPermissionTv.setVisibility(View.VISIBLE);
         }
-        else setLocation();
+        else {
+            view.findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
+            setLocationCallBack();
+            setLocation();
+            noLocationPermissionTv.setVisibility(View.GONE);
+        }
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQ_LOCATION_PERMISSION) {
+            requestLocationPermission();
+        }
     }
 }

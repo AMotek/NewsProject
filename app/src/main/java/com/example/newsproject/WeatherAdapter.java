@@ -13,7 +13,7 @@ import java.util.List;
 
 public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder> {
 
-    List<Weather> weatherList;
+    private List<Weather> weatherList;
 
     public WeatherAdapter(List<Weather> weatherList) {
         this.weatherList = weatherList;

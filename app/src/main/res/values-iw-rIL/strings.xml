@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NewsProject</string>
+    <string name="app_name">חדשות בשבילך</string>
+    <string name="turn_gps_on">אנא הדלק gps בשביל לקבל עדכוני מזג אוויר</string>
+    <string name="set_notification">קבע התראה קבועה</string>
+    <string name="download_article_went_wrong">משהו השתמש בהורדת הכתובות, אנו מנסים לתקן זאת</string>
+    <string name="general">כללי</string>
+    <string name="sports">ספורט</string>
+    <string name="financial">פיננסי</string>
+    <string name="never">אף פעם</string>
+    <string name="thirty_sec">חצי דקה</string>
+    <string name="one_minute">דקה</string>
+    <string name="ten_min">10 דקות</string>
+    <string name="thirty_min">30 דקות</string>
+    <string name="getting_cords_fault">סליחה לא הצלנו להשיג את המיקום שלך בצורה תקינה, לכן לא ניתן להציג מזג אוויר כראוי</string>
+    <string name="set_times_notif_text">קבע התראה קבועה</string>
+    <string name="set_timed_notif_subj_txt">קבע התראה לפי זמן לפי נושא והשאר מעודכן תמיד</string>
+    <string name="time">בחר זמן</string>
+    <string name="subject">בחר נושא</string>
+    <string name="subject_summary">בחר את הנושא עליו תשאר מעודכן</string>
+    <string name="time_summary">בחר זמן קבוע בוא תרצה לקבל התראה על עדכון</string>
 </resources>

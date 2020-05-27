@@ -1,25 +1,25 @@
 <resources>
-    <string name="app_name">News Project</string>
-    <string name="set_notification">Set notification</string>
+    <string name="app_name">Your News app</string>
+    <string name="turn_gps_on">Please turn on location to show weather update</string>
 
     <string-array name="subject_entries">
-        <item >News</item>
-        <item >Sport</item>
-        <item >Financial</item>
+        <item >@string/general</item>
+        <item >@string/sports</item>
+        <item >@string/financial</item>
     </string-array>
 
     <string-array name="subject_values">
-        <item>news</item>
+        <item>general</item>
         <item>sports</item>
         <item>financial</item>
     </string-array>
 
     <string-array name="time_entries">
-        <item>Never</item>
-        <item>Thirty seconds</item>
-        <item>One minute</item>
-        <item>Ten minutes</item>
-        <item>Thirty minutes</item>
+        <item>@string/never</item>
+        <item>@string/thirty_sec</item>
+        <item>@string/one_minute</item>
+        <item>@string/ten_min</item>
+        <item>@string/thirty_min</item>
     </string-array>
 
     <string-array name="time_values">
@@ -29,4 +29,22 @@
         <item>600</item>
         <item>1800</item>
     </string-array>
+
+    <string name="set_notification">Set a notification</string>
+    <string name="download_article_went_wrong">Something went wrong downloading the article, we try our best to solve the same</string>
+    <string name="general">General</string>
+    <string name="sports">Sports</string>
+    <string name="financial">Financial</string>
+    <string name="never">Never</string>
+    <string name="thirty_sec">Thirty second</string>
+    <string name="one_minute">One minute</string>
+    <string name="ten_min">Ten minutes</string>
+    <string name="thirty_min">Thirty minutes</string>
+    <string name="getting_cords_fault">Sorry something went wrong reteriving your coordinates, can\'t show weather predictions</string>
+    <string name="set_times_notif_text">Set a timed notification</string>
+    <string name="set_timed_notif_subj_txt">Set a timed notification to any subject and stay updated</string>
+    <string name="subject">Select subject</string>
+    <string name="time">Select time</string>
+    <string name="subject_summary">select a subject to get notified about</string>
+    <string name="time_summary">select a time to get auto notified</string>
 </resources>

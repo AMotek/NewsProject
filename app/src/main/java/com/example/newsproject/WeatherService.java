@@ -39,9 +39,6 @@ public class WeatherService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
 
-
-
-
         final ArrayList<Weather> weatherList = new ArrayList<>();
         RequestQueue queue = Volley.newRequestQueue(this);
         Double lat = intent.getDoubleExtra("lat", 0);
@@ -78,6 +75,7 @@ public class WeatherService extends IntentService {
 
                     Intent finishIntent = new Intent(ACTION);
                     finishIntent.putExtra("weather_bundle", bundle);
+
                     LocalBroadcastManager.getInstance(WeatherService.this).sendBroadcast(finishIntent);
                 } catch (JSONException e) {
                     e.printStackTrace();
